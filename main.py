@@ -14,6 +14,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("document", type=str, help="Path to the stock document")
     parser.add_argument("year", type=int, help="Tax year")
+    parser.add_argument("--flat_exchange_rate", type=float, help="Use this flat exchange rate instead of daily rate, Comma as sperator ie. 10.123", required=False)
     return parser.parse_args()
 
 def main():
@@ -31,10 +32,10 @@ def main():
         logger.error("Failed to fetch conversion rates.")
         return
 
-    detailed_table_data = calculate_proceeds_costs(stock_data, rate_data)
+    detailed_table_data = calculate_proceeds_costs(stock_data, rate_data, args)
     headers = ["Closed Date", "Quantity", "Proceed SEK rate", "Converted proceed", "Cost SEK Rate", "Converted cost", "Loss/Gain"]
     print_tabulated_data(detailed_table_data, headers)
-    headers = [ "Total quantity", "Total proceed", "Total cost", "Loss/Gain"]
+    headers = [ "Antal","Beteckning", "Försäljningspris", "Omkostnadsbelopp", "Loss/Gain"]
     print_tabulated_data(summary_data(detailed_table_data), headers)
 
 def read_stock_document(filename):
@@ -86,12 +87,16 @@ def get_conversion_rate(tax_year):
         logger.error(f"Failed to fetch conversion data. Status code: {response.status_code}")
         return None
 
-def calculate_proceeds_costs(stock_data, rate_data):
+def calculate_proceeds_costs(stock_data, rate_data, args):
     detailed_table_data = []
     
     for transaction in stock_data:
-        proceed_rate = float(rate_data[transaction[0]])
-        cost_rate = float(rate_data[transaction[2]])
+        if args.flat_exchange_rate:
+            proceed_rate = float(args.flat_exchange_rate)
+            cost_rate = float(args.flat_exchange_rate)
+        else:
+            proceed_rate = float(rate_data[transaction[0]])
+            cost_rate = float(rate_data[transaction[2]])
         converted_proceeds =  (float(transaction[1]) * int(transaction[4])) * float(proceed_rate)
         converted_cost =  (float(transaction[3]) * int(transaction[4])) * float(cost_rate)
         detailed_table_data.append([transaction[0], int(transaction[4]), proceed_rate, round(converted_proceeds,2), cost_rate, round(converted_cost,2), round(converted_proceeds - converted_cost, 2)])
@@ -115,7 +120,7 @@ def summary_data(table_data):
     sum_converted_cost = df['Converted cost'].sum()
     sum_loss_gain = df['Loss/Gain'].sum()
 
-    result_list.append([sum_quantity, round(sum_converted_proceed, 2), round(sum_converted_cost, 2), round(sum_loss_gain, 2)])
+    result_list.append([sum_quantity,"TWLO", round(sum_converted_proceed, 2), round(sum_converted_cost, 2), round(sum_loss_gain, 2)])
     return result_list
 
 
