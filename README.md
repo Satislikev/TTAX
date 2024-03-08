@@ -17,8 +17,9 @@ This is mainly for the limitation of number of SEK/USD conversion rate that I ca
 2. Select Individual account
 3. Select History
 4. Select ``Realized Gain / Loss``
-5. Export (Top right)
-6. Export Details Only
+5. Date range should be set to previous calendar year
+6. Export (Top right)
+7. Export Details Only
 
 ### Python requirements
 * Python `3.9.16` 
