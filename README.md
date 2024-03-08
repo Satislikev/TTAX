@@ -3,8 +3,8 @@
 
 Small stock K4 calculator, for personal use.
 Intended to be used for a certain company.
-It uses loss/gain CSV together with USD/SEK exchange rate that is retrieved from ``www.riksbank.se``to calculate a summary for K4.
-It can also use constant flat exchange rate, you can get the value from ``https://www.riksbank.se/sv/statistik/rantor-och-valutakurser/valutakurser-till-deklarationen/``
+It uses loss/gain CSV together with USD/SEK exchange rate that is retrieved from <https://www.riksbank.se/sv/statistik/rantor-och-valutakurser/sok-rantor-och-valutakurser> to calculate a summary for K4.
+It can also use constant flat exchange rate, you can get the value from <https://www.riksbank.se/sv/statistik/rantor-och-valutakurser/valutakurser-till-deklarationen>
 
 ## Limitation
 Currently only calculation of RSU stocks is possible and not ESPP.
