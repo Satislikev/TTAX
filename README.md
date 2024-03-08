@@ -39,5 +39,5 @@ python main.py stocks.csv 2023
 ```
 ### Output
 
-![alt text](image.png)
+![alt text](image-1.png)
 
