@@ -15,9 +15,10 @@ This is mainly for the limitation of number of SEK/USD conversion rate that I ca
 ### Stock Loss/Gain list
 1. Login in to charles Schwab
 2. Select Individual account
-3. Select ``Realized Gain / Loss``
-4. Export
-5. Export Details Only
+3. Select History
+4. Select ``Realized Gain / Loss``
+5. Export
+6. Export Details Only
 
 ### Python requirements
 * Python `3.9.16` 
