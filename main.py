@@ -13,21 +13,22 @@ logger = logging.getLogger("TTAX")
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("document", type=str, help="Path to the stock document")
-    parser.add_argument("year", type=int, help="Tax year")
-    parser.add_argument("--flat_exchange_rate", type=float, help="Use this flat exchange rate instead of daily rate, Comma as sperator ie. 10.123", required=False)
+    parser.add_argument("--from-year", type=int, help="From Tax year")
+    parser.add_argument("--to-year", type=int, help="To Tax year")
     return parser.parse_args()
 
 def main():
     args = parse_arguments()
     tax_document_path = args.document
-    tax_year = args.year
+    from_tax_year = args.from_year
+    to_tax_year = args.to_year
 
     stock_data = read_stock_document(tax_document_path)
     if not stock_data:
         logger.error("Failed to read stock document.")
         return
 
-    rate_data = get_conversion_rate(tax_year)
+    rate_data = get_conversion_rate(from_tax_year, to_tax_year)
     if not rate_data:
         logger.error("Failed to fetch conversion rates.")
         return
@@ -67,11 +68,17 @@ def convert_date(date):
             return '-'.join([parts[2], parts[0], parts[1]])
     return ''
 
-def get_conversion_rate(tax_year):
-    year_before = tax_year - 1 
-    from_date = f"{year_before}-01-01"
-    to_date = f"{tax_year}-12-31"
-    url = f"https://www.riksbank.se/sv/statistik/rantor-och-valutakurser/sok-rantor-och-valutakurser/?a=D&from={from_date}&fs=3&s=g130-SEKUSDPMI&to={to_date}&d=Dot&export=csv"
+def get_year(date):
+    if date:
+        parts = date.split('-')
+        if len(parts) == 3:
+            return parts[0]
+    return ''
+
+def get_conversion_rate(from_tax_year, to_tax_year):
+    from_date = f"{from_tax_year}-01-01"
+    to_date = f"{to_tax_year}-12-31"
+    url = f"https://www.riksbank.se/sv/statistik/rantor-och-valutakurser/sok-rantor-och-valutakurser/?a=Y&from={from_date}&fs=3&s=g130-SEKUSDPMI&to={to_date}&d=Dot&export=csv"
     
     response = requests.get(url)
     
@@ -91,12 +98,9 @@ def calculate_proceeds_costs(stock_data, rate_data, args):
     detailed_table_data = []
     
     for transaction in stock_data:
-        if args.flat_exchange_rate:
-            proceed_rate = float(args.flat_exchange_rate)
-            cost_rate = float(args.flat_exchange_rate)
-        else:
-            proceed_rate = float(rate_data[transaction[0]])
-            cost_rate = float(rate_data[transaction[2]])
+
+        proceed_rate = float(rate_data[get_year(transaction[0])])
+        cost_rate = float(rate_data[get_year(transaction[2])])
         converted_proceeds =  (float(transaction[1]) * int(transaction[4])) * float(proceed_rate)
         converted_cost =  (float(transaction[3]) * int(transaction[4])) * float(cost_rate)
         detailed_table_data.append([transaction[0], int(transaction[4]), proceed_rate, round(converted_proceeds,2), cost_rate, round(converted_cost,2), round(converted_proceeds - converted_cost, 2)])
@@ -104,7 +108,6 @@ def calculate_proceeds_costs(stock_data, rate_data, args):
     return detailed_table_data
 
 def print_tabulated_data(data, headers):
-    
     print(tabulate(data, headers=headers, tablefmt="pretty"))
 
 def summary_data(table_data):
